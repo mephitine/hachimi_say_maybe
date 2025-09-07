@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh">
+<meta charset="utf-8" />
+<title>大家好啊，我是哈基米</title>
+<style>
+  body{max-width:900px;margin:2rem auto;font-family:system-ui}
+  textarea{width:100%;height:180px}
+  button{margin-right:8px}
+  small{color:#666}
+</style>
+<h1>大家好啊，我是哈基米</h1>
+
+<h3>癌症晚期患者说的话</h3>
+<textarea id="plain"></textarea>
+<p>
+  <button id="encode">下来搞核酸</button>
+  <button id="decode">上去踩踩背</button>
+</p>
+<h3>哈基人说话听不懂啦</h3>
+<textarea id="hachi"></textarea>
+<p id="status"></p>
+
+<script>
+const STANDARD_B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const HACHIMI_ENCODE = [
+  "哈","基","米","那","没","路","多","阿",
+  "西","噶","压","库","那","鲁","曼","波",
+  "欧","马","自","立","老","爷","妈","诺",
+  "斯","哇","哦","冰","踩","背","叮","咚",
+  "鸡","大","狗","叫","袋","鼠","兴","奋",
+  "剂","出","系","健","缸","码","楼","上",
+  "下","来","带","一","段","小","白","手",
+  "套","胖","宝","牛","魔","核","算","酱"
+];
+const HACHIMI_MAP = Object.fromEntries([...STANDARD_B64].map((ch,i)=>[ch,HACHIMI_ENCODE[i]]));
+const DECODE_HACHIMI_MAP = Object.fromEntries(Object.entries(HACHIMI_MAP).map(([k,v])=>[v,k]));
+
+function textToCustom(text){
+  const b64 = btoa(unescape(encodeURIComponent(text)));
+  return [...b64].map(ch => HACHIMI_MAP[ch] ?? "").join("");
+}
+
+function customToText(hachi){
+  const units = HACHIMI_ENCODE;
+  const maxLen = Math.max(...units.map(u=>u.length));
+  let i=0, b64="";
+  while(i<hachi.length){
+    let matched = null;
+    for(let len=Math.min(maxLen, hachi.length-i); len>=1; len--){
+      const piece = hachi.slice(i, i+len);
+      if(DECODE_HACHIMI_MAP[piece]){ matched = piece; break; }
+    }
+    if(!matched){
+      throw new Error("ohno妈咪何意味-->[" + hachi[i] + "]");
+    }
+    b64 += DECODE_HACHIMI_MAP[matched];
+    i += matched.length;
+  }
+  while(b64.length % 4) b64 += "=";
+  return decodeURIComponent(escape(atob(b64)));
+}
+
+const $ = s=>document.querySelector(s);
+function setStatus(msg){ $("#status").textContent = msg; }
+
+$("#encode").onclick = () => {
+  try{
+    setStatus("");
+    $("#hachi").value = textToCustom($("#plain").value);
+    setStatus("倾听哈基米说的道理");
+  }catch(e){ setStatus(String(e)); }
+};
+
+$("#decode").onclick = () => {
+  try{
+    setStatus("");
+    $("#plain").value = customToText($("#hachi").value.trim());
+    setStatus("倾听白银低分狗说的道理");
+  }catch(e){ setStatus(String(e)); }
+};
+
+document.addEventListener("keydown", (e)=>{
+  if(e.ctrlKey && (e.key==='e' || e.key==='E')) { e.preventDefault(); $("#encode").click(); }
+  if(e.ctrlKey && (e.key==='d' || e.key==='D')) { e.preventDefault(); $("#decode").click(); }
+});
+</script>
+</html>
